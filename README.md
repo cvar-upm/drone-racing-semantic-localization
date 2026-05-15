@@ -29,7 +29,7 @@ Dual Pose-Graph Semantic Localization for Vision-Based Autonomous Drone Racing
 ```
 
 </details>
-This paper will be published in the proceedings of the IEEE International Workshop on Metrology for Aerospace (METROAEROSPACE) 2026.
+<!-- This paper has been accepted to the IEEE International Workshop on Metrology for Aerospace (MetroAeroSpace) 2026. -->
 
 ## 🔗 Links
 
