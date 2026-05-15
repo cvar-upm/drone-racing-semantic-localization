@@ -5,6 +5,8 @@ This repository contains the code for the paper "Dual Pose-Graph Semantic Locali
 
 ## 🎥 Videos
 
+### Abu Dhabi Autonomous Racing League (A2RL) 2025 Results
+
 [![A2RL competition results](docs/images/video_thumbnail_a2rl.jpg)](https://vimeo.com/1079143067)
 
 ## 📖 Paper <a id="published-papers"></a>
