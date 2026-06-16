@@ -38,14 +38,19 @@ channels = [
 [feature.humble.dependencies]
 # ROS 2 runtime to replay bags and run the SLAM node.
 ros-humble-ros2cli = "*"
+ros-humble-ros2launch = "*"
+ros-humble-ros2bag = "*"
 ros-humble-rosbag2 = "*"
 ros-humble-rosbag2-storage-mcap = "*"
 ros-humble-rviz2 = "*"
-# Pose-graph SLAM library (consumed by the SemanticSlam ROS node).
-dual_pose_graph = ">=0.1"
-# TODO: depend on the published SemanticSlam ROS node once it is released to a
-# channel. Until then, build SemanticSlam from its repo (it path-builds the
-# ros-humble-dual-pose-graph package) and source that environment alongside.
+# SemanticSlam ROS 2 node; pulls the dual_pose_graph library transitively.
+# NOTE: resolves only once ros-humble-dual-pose-graph is published to the channel.
+ros-humble-dual-pose-graph = ">=0.1"
+
+[feature.humble.tasks]
+# Full experiment pipeline: SLAM node (+ RViz) replaying a bag. Append launch args,
+# e.g. `pixi run experiment bag:=/path/to/rosbag use_sim_time:=true`.
+experiment = "ros2 launch launch/experiment.launch.py"
 
 [environments]
 default = { features = ["humble"], solve-group = "default" }

@@ -63,5 +63,11 @@ The system spans three repositories; this one is the umbrella that ties them tog
 
 ```sh
 pixi install
-# Run the SLAM node on a recorded bag, then evaluate the trajectory with the scripts (evo).
+
+# Full experiment pipeline — SLAM node (+ RViz) replaying a recorded bag:
+pixi run experiment bag:=/path/to/rosbag use_sim_time:=true
+
+# The node writes slam_*.csv to the working directory; convert + evaluate:
+python scripts/csv_to_tum.py ...   # SLAM CSV -> TUM trajectory
+bash scripts/run_evo.sh ...        # APE / RPE via evo
 ```
