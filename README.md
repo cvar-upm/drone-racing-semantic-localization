@@ -54,7 +54,7 @@ The system spans three repositories; this one is the umbrella that ties them tog
 
 ## 🗂️ Repository layout
 
-- `scripts/` — dataset/rosbag conversion, calibration, trajectory evaluation (evo, RPE/APE), plotting.
+- `scripts/` — dataset/rosbag conversion, calibration, trajectory + gate-map evaluation, plotting.
 - `docs/` — figures and notes.
 - `config/` — experiment configuration.
 - `data/` — datasets and rosbags (gitignored).
@@ -67,7 +67,10 @@ pixi install
 # Full experiment pipeline — SLAM node (+ RViz) replaying a recorded bag:
 pixi run experiment bag:=/path/to/rosbag use_sim_time:=true
 
-# The node writes slam_*.csv to the working directory; convert + evaluate:
-python scripts/csv_to_tum.py ...   # SLAM CSV -> TUM trajectory
-bash scripts/run_evo.sh ...        # APE / RPE via evo
+# The node writes slam_*.csv + a copy of the config into runs/<bag-name>/. Extract GT and evaluate:
+python scripts/extract_ground_truth.py --bag /path/to/rosbag --output runs/<bag>/slam_ground_truth.csv
+python scripts/evaluate_slam.py --log-dir runs/<bag> --align --origin-align    # trajectory RMSE
+python scripts/extract_gates_gt.py --bag /path/to/rosbag --output runs/<bag>/gates_ground_truth.csv
+python scripts/evaluate_gates.py --estimated runs/<bag>/slam_estimated_objects.csv \
+    --true-csv runs/<bag>/gates_ground_truth.csv                                # gate-pose error vs GT
 ```
