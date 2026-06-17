@@ -54,7 +54,7 @@ The system spans three repositories; this one is the umbrella that ties them tog
 
 ## 🗂️ Repository layout
 
-- `scripts/` — dataset/rosbag conversion, calibration, trajectory + gate-map evaluation, plotting.
+- `scripts/` — dataset/rosbag conversion, calibration, trajectory + gate-map evaluation.
 - `docs/` — figures and notes.
 - `config/` — experiment configuration.
 - `data/` — datasets and rosbags (gitignored).
