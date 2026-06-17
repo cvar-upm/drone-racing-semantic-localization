@@ -52,25 +52,14 @@ The system spans three repositories; this one is the umbrella that ties them tog
   as the `dual_pose_graph_node`.
 - **this repo** — experiments, evaluation and reproducibility tooling.
 
-## 🗂️ Repository layout
-
-- `scripts/` — dataset/rosbag conversion, calibration, trajectory + gate-map evaluation.
-- `docs/` — figures and notes.
-- `config/` — experiment configuration.
-- `data/` — datasets and rosbags (gitignored).
-
 ## 🚀 Getting started
 
 ```sh
 pixi install
 
-# Full experiment pipeline — SLAM node (+ RViz) replaying a recorded bag:
+# Replay a recorded bag through the SLAM node (+ RViz):
 pixi run experiment bag:=/path/to/rosbag use_sim_time:=true
-
-# The node writes slam_*.csv + a copy of the config into runs/<bag-name>/. Extract GT and evaluate:
-python scripts/extract_ground_truth.py --bag /path/to/rosbag --output runs/<bag>/slam_ground_truth.csv
-python scripts/evaluate_slam.py --log-dir runs/<bag> --align --origin-align    # trajectory RMSE
-python scripts/extract_gates_gt.py --bag /path/to/rosbag --output runs/<bag>/gates_ground_truth.csv
-python scripts/evaluate_gates.py --estimated runs/<bag>/slam_estimated_objects.csv \
-    --true-csv runs/<bag>/gates_ground_truth.csv                                # gate-pose error vs GT
 ```
+
+Outputs (`slam_*.csv` plus the config used) land in `runs/<bag-name>/`; evaluate against ground
+truth with `scripts/evaluate_slam.py` (trajectory) and `scripts/evaluate_gates.py` (gate map).
