@@ -36,6 +36,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     slam_share = get_package_share_directory("dual_pose_graph")
     default_config = os.path.join(slam_share, "config", "config.yaml")
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    default_rviz_config = os.path.join(repo_root, "config", "config.rviz")
+    qos_overrides = os.path.join(repo_root, "config", "qos_overrides.yaml")
 
     bag = LaunchConfiguration("bag")
     namespace = LaunchConfiguration("namespace")
@@ -43,6 +46,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration("use_sim_time")
     rate = LaunchConfiguration("rate")
     rviz = LaunchConfiguration("rviz")
+    rviz_config = LaunchConfiguration("rviz_config")
 
     declared_args = [
         DeclareLaunchArgument("bag", description="Path to the rosbag to replay."),
@@ -53,9 +57,12 @@ def generate_launch_description():
             description="SLAM node config (defaults to the package config.yaml)."),
         DeclareLaunchArgument(
             "use_sim_time", default_value="true",
-            description="Use the bag clock (the bag is played with --clock)."),
+            description="Use the bag's recorded /clock as sim time."),
         DeclareLaunchArgument("rate", default_value="1.0", description="Bag playback rate."),
         DeclareLaunchArgument("rviz", default_value="true", description="Open RViz."),
+        DeclareLaunchArgument(
+            "rviz_config", default_value=default_rviz_config,
+            description="RViz config file (defaults to config/config.rviz)."),
     ]
 
     slam_node = IncludeLaunchDescription(
@@ -73,12 +80,15 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         condition=IfCondition(rviz),
+        arguments=["-d", rviz_config],
         parameters=[{"use_sim_time": use_sim_time}],
         output="screen",
     )
 
     bag_play = ExecuteProcess(
-        cmd=["ros2", "bag", "play", bag, "--clock", "--rate", rate],
+        cmd=["ros2", "bag", "play", "-s", "mcap", bag,
+             "--qos-profile-overrides-path", qos_overrides,
+             "--rate", rate],
         output="screen",
     )
 
