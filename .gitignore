@@ -21,4 +21,5 @@ rosbags/
 slam_*.csv
 *.tum
 /results/
+/runs/
 plots/

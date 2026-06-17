@@ -31,7 +31,43 @@ def parse_args():
                         help="earth_to_map rotation (roll pitch yaw)")
     parser.add_argument("--max-time", type=float, default=None,
                         help="Evaluate only the first N seconds")
+    parser.add_argument("--align", action="store_true",
+                        help="Also report Umeyama SE3-aligned RMSE (fair metric for SLAM)")
+    parser.add_argument("--origin-align", action="store_true",
+                        help="Also report RMSE with only the first pose (origin) pinned to truth")
     return parser.parse_args()
+
+
+def align_rmse(src, dst):
+    """RMSE after optimal SE3 (no-scale) Umeyama alignment of src onto dst."""
+    src_c = src.mean(axis=0)
+    dst_c = dst.mean(axis=0)
+    H = (src - src_c).T @ (dst - dst_c)
+    U, _, Vt = np.linalg.svd(H)
+    R = Vt.T @ U.T
+    if np.linalg.det(R) < 0:
+        Vt[-1, :] *= -1
+        R = Vt.T @ U.T
+    t = dst_c - R @ src_c
+    src_a = (R @ src.T).T + t
+    d = src_a - dst
+    return {
+        "3d": np.sqrt(np.mean(np.sum(d ** 2, axis=1))),
+        "xy": np.sqrt(np.mean(np.sum(d[:, :2] ** 2, axis=1))),
+        "z": np.sqrt(np.mean(d[:, 2] ** 2)),
+    }
+
+
+def origin_rmse(src_pts, src_quats, dst_pts, dst_quats):
+    """RMSE after pinning only the first pose (origin) of src onto dst (drift from a known start)."""
+    R = Rotation.from_quat(dst_quats[0]).as_matrix() @ Rotation.from_quat(src_quats[0]).as_matrix().T
+    t = dst_pts[0] - R @ src_pts[0]
+    d = (R @ src_pts.T).T + t - dst_pts
+    return {
+        "3d": np.sqrt(np.mean(np.sum(d ** 2, axis=1))),
+        "xy": np.sqrt(np.mean(np.sum(d[:, :2] ** 2, axis=1))),
+        "z": np.sqrt(np.mean(d[:, 2] ** 2)),
+    }
 
 
 def main():
@@ -51,6 +87,8 @@ def main():
 
     errors = {"raw_3d": [], "cor_3d": [], "raw_xy": [], "cor_xy": [],
               "raw_z": [], "cor_z": [], "raw_rot": [], "cor_rot": []}
+    cor_pts, raw_pts, gp_pts = [], [], []
+    cor_quats, raw_quats, gp_quats = [], [], []
 
     t0 = odom_ts.iloc[0]
     for i in range(len(odom)):
@@ -61,6 +99,9 @@ def main():
         raw = np.array([odom.iloc[i].raw_x, odom.iloc[i].raw_y, odom.iloc[i].raw_z])
         raw_earth = R_e2m.T @ (raw - t_e2m)
         gp = gt_xyz[idx]
+        cor_pts.append(cor)
+        raw_pts.append(raw)
+        gp_pts.append(gp)
 
         errors["cor_3d"].append(np.linalg.norm(cor - gp))
         errors["raw_3d"].append(np.linalg.norm(raw_earth - gp))
@@ -78,6 +119,9 @@ def main():
 
         errors["raw_rot"].append(np.degrees((R_gt.inv() * R_raw_earth).magnitude()))
         errors["cor_rot"].append(np.degrees((R_gt.inv() * R_cor).magnitude()))
+        cor_quats.append(cor_q)
+        raw_quats.append(raw_q)
+        gp_quats.append(gt_quat[idx])
 
     print(f"Samples: {len(odom)} odom, {len(gt)} GT")
     print()
@@ -109,6 +153,26 @@ def main():
           f"  cor={e_cor_3d[:q].mean():.3f}m")
     print(f"Last quarter:   raw={e_raw_3d[-q:].mean():.3f}m"
           f"  cor={e_cor_3d[-q:].mean():.3f}m")
+
+    if args.align:
+        cor_a = align_rmse(np.array(cor_pts), np.array(gp_pts))
+        raw_a = align_rmse(np.array(raw_pts), np.array(gp_pts))
+        print()
+        print("=== RMSE (Umeyama SE3-aligned) ===")
+        for name in ["3d", "xy", "z"]:
+            pct = (1 - cor_a[name] / raw_a[name]) * 100
+            print(f"{name.upper():3s}  Raw={raw_a[name]:.3f}m  Corrected={cor_a[name]:.3f}m"
+                  f"  Improvement={pct:+.1f}%")
+
+    if args.origin_align:
+        cor_o = origin_rmse(np.array(cor_pts), cor_quats, np.array(gp_pts), gp_quats)
+        raw_o = origin_rmse(np.array(raw_pts), raw_quats, np.array(gp_pts), gp_quats)
+        print()
+        print("=== RMSE (origin-anchored: only first pose pinned to truth) ===")
+        for name in ["3d", "xy", "z"]:
+            pct = (1 - cor_o[name] / raw_o[name]) * 100
+            print(f"{name.upper():3s}  Raw={raw_o[name]:.3f}m  Corrected={cor_o[name]:.3f}m"
+                  f"  Improvement={pct:+.1f}%")
 
 
 if __name__ == "__main__":
