@@ -23,3 +23,6 @@ slam_*.csv
 /results/
 /runs/
 plots/
+
+# Datasets
+data/
