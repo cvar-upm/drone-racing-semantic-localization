@@ -1,0 +1,43 @@
+/**:
+  ros__parameters:
+    odometry_topic: "/ov_msckf/odomimu"
+    pose_topic: ""
+    detections_topic: "/detections/gates"
+    corrected_localization_topic: "slam/corrected_localization"
+    corrected_path_topic: "slam/corrected_path"
+    map_frame: "map"
+    odom_frame: "odom"
+    robot_frame: "base_link"
+    viz_main_markers_topic: "slam_viz/markers/main"
+    viz_temp_markers_topic: "slam_viz/markers/temp"
+    main_graph_odometry_distance_threshold: 0.1
+    main_graph_odometry_distance_threshold_if_detections: 0.1
+    main_graph_odometry_orientation_threshold: 5.0
+    temp_graph_odometry_distance_threshold: 0.1
+    temp_graph_odometry_orientation_threshold: 0.1
+    generate_odom_map_transform: true
+    earth_to_map:
+      x: -0.535733
+      y: -1.717558
+      z: -0.107970
+      roll: 0.019542
+      pitch: -0.048544
+      yaw: 3.132710
+    visualize_graphs: true
+    map_odom_security_threshold: 5.0
+    calculate_odom_covariance: true
+    map_odom_transform_alpha: 1.0
+    # DETECTIONS
+    generate_orientation_cov_by_distance: false
+    distance_for_orientation_covariance_increment: 10.0
+    detection_orientation_covariance_large_factor: 100.0
+    detection_covariance_by_distance: false
+    detection_covariance_by_distance2: false
+    detection_covariance_factor: 0.1
+    detection_orientation_covariance_factor: 1.0
+    throttle_detections: true
+    use_dual_graph: false
+    force_object_type: "aruco"
+    # SLAM mode: no fixed_objects -> gates are estimated as free landmarks,
+    # loop-closing on repeated IDs (gate_1..4). Compare against the localization
+    # config (same file + a fixed_objects block) under aligned APE.

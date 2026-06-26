@@ -1,0 +1,54 @@
+[workspace]
+name = "drone-racing-semantic-localization"
+version = "0.1.0"
+description = "Autonomous drone racing at the A2RL (Abu Dhabi Autonomous Racing League) Season 1 competition: experiments, evaluation and reproducibility."
+authors = [
+  "David Perez-Saura <david.perez.saura@upm.es>",
+  "Miguel Fernandez-Cortizas <miguel.fernandez.cortizas@upm.es>",
+  "Alvaro J. Gaona <alvgaona@gmail.com>",
+  "Pascual Campoy <pascual.campoy@upm.es>",
+]
+channels = [
+  "conda-forge",
+  "robostack-humble",
+  "https://prefix.dev/aerostack2",
+  "https://prefix.dev/dual-pose-graph",
+]
+platforms = ["osx-arm64"]
+
+[dependencies]
+numpy = "*"
+scipy = "*"
+pandas = "*"
+matplotlib = "*"
+pyyaml = "*"
+opencv = "*"
+py-opencv = "*"
+tqdm = "*"
+evo = "*"
+
+[feature.humble]
+channels = [
+  "robostack-humble",
+  "https://prefix.dev/aerostack2",
+  "https://prefix.dev/dual-pose-graph",
+]
+
+[feature.humble.activation.env]
+ROS_LOCALHOST_ONLY = "1"
+
+[feature.humble.dependencies]
+ros-humble-ros2cli = "*"
+ros-humble-ros2launch = "*"
+ros-humble-ros2bag = "*"
+ros-humble-rosbag2 = "*"
+ros-humble-rosbag2-storage-mcap = ">=0.15.16,<0.16"
+ros-humble-rviz2 = "*"
+ros-humble-dual-pose-graph = ">=0.1"
+ros-humble-ros2topic = ">=0.18.17,<0.19"
+
+[feature.humble.tasks]
+experiment = "ros2 launch launch/experiment.launch.py"
+
+[environments]
+default = { features = ["humble"], solve-group = "default" }

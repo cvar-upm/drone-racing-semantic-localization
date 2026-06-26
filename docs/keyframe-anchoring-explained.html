@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keyframe Anchoring: Single Graph vs Dual Graph</title>
+<style>
+  :root {
+    --bg: #fdfcfa;
+    --bg-soft: #f6f4f0;
+    --card: #ffffff;
+    --ink: #27272a;
+    --ink-strong: #18181b;
+    --muted: #71717a;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --single: #b45309;
+    --single-soft: #fef3c7;
+    --dual: #0f766e;
+    --dual-soft: #ccfbf1;
+    --error: #b91c1c;
+    --error-soft: #fef2f2;
+    --ok: #15803d;
+    --ok-soft: #f0fdf4;
+    --border: #e7e5e4;
+    --border-strong: #d6d3d1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: -apple-system, "SF Pro Text", "Segoe UI", Inter, Roboto, sans-serif;
+    font-size: 17px;
+    background:
+      radial-gradient(1200px 500px at 50% -100px, #eef2ff 0%, transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 1.25rem 6rem;
+  }
+
+  header {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 5rem 0 3rem;
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid #e0e7ff;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    margin-bottom: 1.25rem;
+  }
+  header h1 {
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ink-strong);
+    line-height: 1.2;
+  }
+  header p.subtitle {
+    margin: 1.1rem auto 0;
+    font-size: 1.12rem;
+    color: var(--muted);
+    max-width: 580px;
+    line-height: 1.7;
+  }
+
+  main { max-width: 780px; margin: 0 auto; }
+
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 2.5rem 2.75rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 8px 24px -12px rgba(24, 24, 27, 0.08);
+  }
+  @media (max-width: 640px) {
+    section.card { padding: 1.75rem 1.4rem; }
+  }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-bottom: 1.4rem;
+  }
+  .step {
+    flex: none;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .step.single { background: var(--single-soft); color: var(--single); }
+  .step.dual { background: var(--dual-soft); color: var(--dual); }
+  .step.dark { background: rgba(255,255,255,0.12); color: #c7d2fe; }
+
+  h2 {
+    font-size: 1.45rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    color: var(--ink-strong);
+    line-height: 1.3;
+  }
+  h2 .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.28rem 0.7rem;
+    border-radius: 999px;
+    vertical-align: 0.2em;
+    margin-left: 0.6rem;
+    white-space: nowrap;
+  }
+  .tag.single { background: var(--single-soft); color: var(--single); }
+  .tag.dual { background: var(--dual-soft); color: var(--dual); }
+
+  p { margin-bottom: 1.1rem; }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 680; color: var(--ink-strong); }
+  em { font-style: italic; }
+
+  .figure {
+    margin: 1.75rem 0;
+    padding: 1.5rem 1.25rem 1.1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .figure svg { width: 100%; height: auto; display: block; }
+  .figure figcaption {
+    margin-top: 0.9rem;
+    font-size: 0.86rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.55;
+  }
+
+  .callout {
+    display: flex;
+    gap: 0.85rem;
+    border: 1px solid #e0e7ff;
+    background: var(--accent-soft);
+    padding: 1.1rem 1.3rem;
+    border-radius: 14px;
+    margin: 1.4rem 0;
+  }
+  .callout .icon { flex: none; font-size: 1.15rem; line-height: 1.6; }
+  .callout p { margin: 0; }
+  .callout.key { border-color: #fde68a; background: #fffbeb; }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.4rem 0 1rem;
+    font-size: 0.93rem;
+    line-height: 1.55;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.85rem 1rem;
+    vertical-align: top;
+  }
+  thead th {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr + tr td { border-top: 1px solid var(--border); }
+  tbody td:first-child {
+    font-weight: 650;
+    color: var(--ink-strong);
+    width: 26%;
+  }
+  td.single-col { color: var(--single); }
+  td.dual-col { color: var(--dual); }
+  td.span-note { color: var(--ink); background: #fafaf9; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.5rem;
+    justify-content: center;
+    margin-top: 1.1rem;
+    font-size: 0.84rem;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 0.45rem; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+
+  section.card.verdict {
+    background: linear-gradient(150deg, #1e1b4b 0%, #18181b 70%);
+    color: #d4d4d8;
+    border: 1px solid #312e81;
+  }
+  .verdict h2 { color: #fafafa; }
+  .verdict strong { color: #ffffff; }
+  .verdict .callout {
+    background: rgba(129, 140, 248, 0.12);
+    border-color: rgba(129, 140, 248, 0.35);
+    color: #e4e4e7;
+  }
+  .verdict .callout strong { color: #c7d2fe; }
+
+  .answer {
+    margin-top: 1.5rem;
+    padding: 1.3rem 1.5rem;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px dashed rgba(255, 255, 255, 0.25);
+    font-size: 1.02rem;
+    line-height: 1.75;
+  }
+  .answer .label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #a5b4fc;
+    margin-bottom: 0.5rem;
+  }
+
+  footer {
+    max-width: 780px;
+    margin: 2.5rem auto 0;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  footer code {
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    font-size: 0.78rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.4rem;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="eyebrow">DPS-SLAM · Design Note</span>
+  <h1>Where Do Detections<br>Get Attached?</h1>
+  <p class="subtitle">
+    How the single-graph and dual-graph approaches tie gate and marker sightings to the
+    pose graph — and why both attach measurements to slightly wrong poses.
+  </p>
+</header>
+
+<main>
+
+<section class="card">
+  <div class="section-head">
+    <span class="step">1</span>
+    <h2>The Setup: Breadcrumbs and Sightings</h2>
+  </div>
+  <p>
+    As the drone flies, it drops a <strong>keyframe</strong> — think of it as a breadcrumb —
+    every <strong>2 meters</strong> of travel. The map is built only out of these breadcrumbs.
+    This rule is <strong>identical in both versions</strong>: seeing a gate or marker never
+    creates a keyframe by itself.
+  </p>
+  <p>
+    When the drone spots a gate, the measurement is inherently relative:
+    <em>“the gate is 3&nbsp;m ahead of me and 1&nbsp;m to my left.”</em>
+    That statement is only true <strong>from the exact spot where the drone was looking</strong>.
+    To use it, the system must tie it to one of the breadcrumbs — but the drone almost never
+    sees a gate at the precise moment it drops one. The sighting happens
+    <em>somewhere in between</em>.
+  </p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 800 190" xmlns="http://www.w3.org/2000/svg">
+      <line x1="40" y1="110" x2="760" y2="110" stroke="#d6d3d1" stroke-width="3"/>
+      <circle cx="80" cy="110" r="11" fill="#52525b"/>
+      <circle cx="320" cy="110" r="11" fill="#52525b"/>
+      <circle cx="560" cy="110" r="11" fill="#d6d3d1" stroke="#52525b" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="80" y="145" text-anchor="middle" font-size="13" fill="#52525b">keyframe k−1</text>
+      <text x="320" y="145" text-anchor="middle" font-size="13" fill="#52525b">keyframe k</text>
+      <text x="560" y="145" text-anchor="middle" font-size="13" fill="#71717a">next keyframe (k+1)</text>
+      <text x="440" y="168" text-anchor="middle" font-size="12" fill="#a8a29e">← 2 m apart →</text>
+      <g transform="translate(430,110)">
+        <polygon points="0,-14 12,8 -12,8" fill="#4f46e5"/>
+        <text x="0" y="32" text-anchor="middle" font-size="13" fill="#4f46e5" font-weight="600">drone sees the gate HERE</text>
+      </g>
+      <rect x="640" y="38" width="14" height="44" rx="3" fill="#15803d"/>
+      <rect x="690" y="38" width="14" height="44" rx="3" fill="#15803d"/>
+      <rect x="640" y="34" width="64" height="8" rx="3" fill="#15803d"/>
+      <text x="672" y="100" text-anchor="middle" font-size="13" fill="#15803d" font-weight="600">gate</text>
+      <line x1="442" y1="100" x2="635" y2="62" stroke="#4f46e5" stroke-width="2" stroke-dasharray="5 4"/>
+      <text x="528" y="68" text-anchor="middle" font-size="12" fill="#4f46e5">“3 m ahead, 1 m left”</text>
+    </svg>
+    <figcaption>
+      The measurement is valid only from the blue triangle — but the map only contains the gray breadcrumbs.
+    </figcaption>
+  </figure>
+
+  <div class="callout">
+    <span class="icon">🎯</span>
+    <p>
+      <strong>The core question:</strong> the sighting happened between breadcrumbs.
+      Which breadcrumb does the measurement get glued to — and does anyone correct
+      for the gap? Each version answers this differently.
+    </p>
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-head">
+    <span class="step single">2</span>
+    <h2>Single Graph <span class="tag single">errs backward</span></h2>
+  </div>
+  <p>
+    The moment a gate is seen, the single graph immediately attaches the measurement to the
+    <strong>last breadcrumb already dropped</strong> — the one <em>behind</em> the drone,
+    possibly up to 2 meters back.
+  </p>
+  <p>
+    It's like saying: <em>“from the lamppost I passed a while ago, the gate is 3&nbsp;m ahead
+    and 1&nbsp;m left.”</em> That's false — it was 3&nbsp;m ahead of the <strong>drone</strong>,
+    which kept flying after the lamppost. The distance traveled since that breadcrumb is silently
+    absorbed as error in where the map believes the gate is.
+  </p>
+
+  <figure class="figure">
+    <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+      <line x1="40" y1="120" x2="760" y2="120" stroke="#d6d3d1" stroke-width="3"/>
+      <circle cx="160" cy="120" r="11" fill="#b45309"/>
+      <circle cx="640" cy="120" r="11" fill="#d6d3d1" stroke="#52525b" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="160" y="155" text-anchor="middle" font-size="13" fill="#b45309" font-weight="600">last keyframe</text>
+      <text x="640" y="155" text-anchor="middle" font-size="13" fill="#71717a">next keyframe</text>
+      <g transform="translate(450,120)">
+        <polygon points="0,-14 12,8 -12,8" fill="#4f46e5"/>
+        <text x="0" y="34" text-anchor="middle" font-size="13" fill="#4f46e5" font-weight="600">sighting</text>
+      </g>
+      <rect x="560" y="40" width="12" height="38" rx="3" fill="#15803d"/>
+      <rect x="602" y="40" width="12" height="38" rx="3" fill="#15803d"/>
+      <rect x="560" y="36" width="54" height="7" rx="3" fill="#15803d"/>
+      <path d="M 170 110 Q 360 30 555 52" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <text x="350" y="48" text-anchor="middle" font-size="13" fill="#b91c1c" font-weight="600">measurement glued here ✗</text>
+      <line x1="172" y1="178" x2="438" y2="178" stroke="#b91c1c" stroke-width="2"/>
+      <line x1="172" y1="172" x2="172" y2="184" stroke="#b91c1c" stroke-width="2"/>
+      <line x1="438" y1="172" x2="438" y2="184" stroke="#b91c1c" stroke-width="2"/>
+      <text x="305" y="196" text-anchor="middle" font-size="12" fill="#b91c1c">unmodeled gap: up to ~2 m</text>
+    </svg>
+    <figcaption>
+      Single graph: the relative measurement is anchored to the breadcrumb <em>behind</em> the sighting.
+    </figcaption>
+  </figure>
+
+  <p>
+    Two mitigations soften this. While gates are in view, the breadcrumb spacing tightens from
+    2&nbsp;m to <strong>0.5&nbsp;m</strong>, shrinking the worst-case gap. And a throttle keeps
+    only <strong>one sighting per object per breadcrumb interval</strong>, limiting how much
+    inconsistent evidence piles up.
+  </p>
+</section>
+
+<section class="card">
+  <div class="section-head">
+    <span class="step dual">3</span>
+    <h2>Dual Graph <span class="tag dual">errs forward</span></h2>
+  </div>
+  <p>
+    The dual graph starts more carefully. While the drone is seeing gates, it keeps a small
+    <strong>private scratch map</strong> on the side, dropping mini-breadcrumbs every
+    <strong>20&nbsp;cm</strong>. Each sighting is tied to a mini-breadcrumb at most 20&nbsp;cm
+    from the true viewing spot — nearly exact.
+  </p>
+  <p>
+    But the scratch map is temporary. When the drone hits the distance threshold and drops the
+    next <strong>real</strong> breadcrumb, everything in the scratch map is squashed into a single
+    summarized statement and attached to that <strong>brand-new breadcrumb</strong> — the one
+    dropped <em>after</em> the gate was seen.
+  </p>
+
+  <div class="callout key">
+    <span class="icon">💡</span>
+    <p>
+      This is exactly the behavior you were told about: <strong>the pose is added at step
+      k+1, but the gate information inside it was gathered at step k.</strong> The drone may have
+      moved up to half a meter between “saw the gate” and “dropped the breadcrumb,” and that gap
+      is baked into the merged constraint as if it didn't exist.
+    </p>
+  </div>
+
+  <figure class="figure">
+    <svg viewBox="0 0 800 230" xmlns="http://www.w3.org/2000/svg">
+      <line x1="40" y1="120" x2="760" y2="120" stroke="#d6d3d1" stroke-width="3"/>
+      <circle cx="120" cy="120" r="11" fill="#52525b"/>
+      <circle cx="660" cy="120" r="11" fill="#0f766e"/>
+      <text x="120" y="155" text-anchor="middle" font-size="13" fill="#52525b">last keyframe (k)</text>
+      <text x="660" y="155" text-anchor="middle" font-size="13" fill="#0f766e" font-weight="600">new keyframe (k+1)</text>
+      <circle cx="240" cy="120" r="6" fill="#99f6e4" stroke="#0f766e" stroke-width="1.5"/>
+      <circle cx="310" cy="120" r="6" fill="#99f6e4" stroke="#0f766e" stroke-width="1.5"/>
+      <circle cx="380" cy="120" r="6" fill="#99f6e4" stroke="#0f766e" stroke-width="1.5"/>
+      <circle cx="450" cy="120" r="6" fill="#99f6e4" stroke="#0f766e" stroke-width="1.5"/>
+      <text x="345" y="98" text-anchor="middle" font-size="12" fill="#0f766e">scratch-map mini-breadcrumbs (every 0.2 m)</text>
+      <rect x="330" y="22" width="12" height="34" rx="3" fill="#15803d"/>
+      <rect x="368" y="22" width="12" height="34" rx="3" fill="#15803d"/>
+      <rect x="330" y="18" width="50" height="7" rx="3" fill="#15803d"/>
+      <line x1="242" y1="113" x2="330" y2="50" stroke="#15803d" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <line x1="312" y1="113" x2="348" y2="58" stroke="#15803d" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <line x1="382" y1="113" x2="368" y2="58" stroke="#15803d" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <line x1="452" y1="113" x2="384" y2="54" stroke="#15803d" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <path d="M 655 110 Q 520 18 388 36" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <text x="560" y="44" text-anchor="middle" font-size="13" fill="#b91c1c" font-weight="600">one merged summary glued here ✗</text>
+      <line x1="462" y1="190" x2="648" y2="190" stroke="#b91c1c" stroke-width="2"/>
+      <line x1="462" y1="184" x2="462" y2="196" stroke="#b91c1c" stroke-width="2"/>
+      <line x1="648" y1="184" x2="648" y2="196" stroke="#b91c1c" stroke-width="2"/>
+      <text x="555" y="210" text-anchor="middle" font-size="12" fill="#b91c1c">unmodeled gap: up to ~0.5 m</text>
+    </svg>
+    <figcaption>
+      Dual graph: sightings are anchored precisely in the scratch map, but their summary is
+      anchored to the breadcrumb <em>ahead</em> of them.
+    </figcaption>
+  </figure>
+
+  <p>
+    There's a second, subtler cost: the merge <strong>squashes many individual sightings into
+    one constraint</strong>. The rich per-sighting geometry that the scratch map captured so
+    carefully is collapsed before it ever reaches the real map.
+  </p>
+</section>
+
+<section class="card">
+  <div class="section-head">
+    <span class="step">4</span>
+    <h2>Side by Side</h2>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Single Graph</th>
+        <th>Dual Graph</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Keyframe trigger</td>
+        <td colspan="2" class="span-note">Identical: every 2 m of travel, tightened to 0.5 m while detections are in view. A sighting never creates a keyframe.</td>
+      </tr>
+      <tr>
+        <td>Where a sighting attaches</td>
+        <td class="single-col">Immediately, to the keyframe <em>behind</em> the drone</td>
+        <td class="dual-col">To a fresh scratch-map node ≤ 0.2 m away</td>
+      </tr>
+      <tr>
+        <td>The anchoring error</td>
+        <td class="single-col">Backward: up to ~2 m (first sighting), ~0.5 m after</td>
+        <td class="dual-col">Forward, at merge time: up to ~0.5 m</td>
+      </tr>
+      <tr>
+        <td>Information kept</td>
+        <td class="single-col">Each sighting becomes its own constraint (throttled per object)</td>
+        <td class="dual-col">All sightings squashed into one summary per object</td>
+      </tr>
+      <tr>
+        <td>“Pose at k+1, detection from k”?</td>
+        <td class="single-col">No — it's the reverse: detection from k tied to pose at k−1</td>
+        <td class="dual-col">Yes — this literally describes the merge</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="legend">
+    <span><span class="dot" style="background:#52525b"></span> main-map keyframe</span>
+    <span><span class="dot" style="background:#99f6e4; border:1.5px solid #0f766e"></span> scratch-map node</span>
+    <span><span class="dot" style="background:#4f46e5"></span> drone at sighting</span>
+    <span><span class="dot" style="background:#b91c1c"></span> misplaced attachment</span>
+  </div>
+</section>
+
+<section class="card verdict">
+  <div class="section-head">
+    <span class="step dark">5</span>
+    <h2>So… Is This the Right Behavior?</h2>
+  </div>
+  <p>
+    <strong>No — in both versions it's an approximation error, not a defensible design
+    choice.</strong> The textbook-correct options would be to either drop a keyframe at the exact
+    pose where the sighting happened, or mathematically shift the measurement so it's expressed
+    relative to the keyframe it gets attached to. Neither version does either one: both glue a
+    measurement to a pose it was not measured from.
+  </p>
+  <p>
+    What <em>can</em> be said in its defense: the error is <strong>bounded and known</strong> —
+    it can never exceed the breadcrumb spacing — and both versions deliberately shrink that bound
+    by tightening the spacing to 0.5 m whenever gates are in view. That tightening is the
+    author's chosen mitigation, in place of fixing the geometry.
+  </p>
+  <p>
+    And the benchmark result makes sense in this light: the single graph wins in practice because
+    the dual graph's extra machinery — the summary step, the squashing of sightings, plus its own
+    forward anchoring gap — costs more accuracy than its careful scratch map saves.
+  </p>
+  <div class="answer">
+    <span class="label">The one-sentence answer</span>
+    Both versions knowingly attach detections to slightly wrong poses — the single graph errs
+    backward toward the previous keyframe, the dual graph errs forward at merge time — neither
+    is geometrically correct, but the error is bounded by the keyframe spacing, which is why
+    that spacing tightens when detections appear.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  DPS-SLAM · keyframe anchoring behavior · single-graph vs dual-graph detection routing (both on <code>main</code>)
+</footer>
+
+</body>
+</html>

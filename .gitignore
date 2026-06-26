@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# pixi
+.pixi/
+
+# macOS
+.DS_Store
+
+# Datasets and rosbags (large; not versioned)
+/data/*
+!/data/.gitkeep
+*.bag
+*.mcap
+*.db3
+rosbags/
+
+# Experiment outputs (trajectories, SLAM CSV logs, plots)
+slam_*.csv
+*.tum
+/results/
+/runs/
+plots/
+
+# Datasets
+data/
